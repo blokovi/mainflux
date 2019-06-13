@@ -69,6 +69,8 @@ initial =
 
 type Msg
     = SubmitMessage String
+    | StartRecording
+    | StopRecording
     | SendMessage
     | Listen
     | Stop
@@ -92,11 +94,29 @@ update msg model token =
         SubmitMessage message ->
             ( { model | message = message }, Cmd.none )
 
+        StartRecording ->
+            ( { model | message = """[{"bn":"1:", "n":"control", "vs":"wowza-start-recording, _defaultServer_, _defaultVHost_, liveapp, liveapp, cam1.stream"}]""" }
+            , Cmd.batch
+                (List.map
+                    (\channelid -> send channelid model.thingkey model.message "req")
+                    model.checkedChannelsIds
+                )
+            )
+
+        StopRecording ->
+            ( { model | message = """[{"bn":"1:", "n":"control", "vs":"wowza-stop-recording, _defaultServer_, _defaultVHost_, liveapp, liveapp, cam1.stream"}]""" }
+            , Cmd.batch
+                (List.map
+                    (\channelid -> send channelid model.thingkey model.message "req")
+                    model.checkedChannelsIds
+                )
+            )
+
         SendMessage ->
             ( model
             , Cmd.batch
                 (List.map
-                    (\channelid -> send channelid model.thingkey model.message)
+                    (\channelid -> send channelid model.thingkey model.message "")
                     model.checkedChannelsIds
                 )
             )
@@ -241,7 +261,9 @@ view model =
                                 ]
                             , Grid.col [ Col.attrs [ align "right" ] ]
                                 [ Form.group []
-                                    [ Button.button [ Button.secondary, Button.attrs [ Spacing.ml1 ], Button.onClick SendMessage ] [ text "Send" ]
+                                    [ Button.button [ Button.secondary, Button.attrs [ Spacing.ml1 ], Button.onClick StartRecording ] [ text "Record" ]
+                                    , Button.button [ Button.secondary, Button.attrs [ Spacing.ml1 ], Button.onClick StopRecording ] [ text "Stop" ]
+                                    , Button.button [ Button.secondary, Button.attrs [ Spacing.ml1 ], Button.onClick SendMessage ] [ text "Send" ]
                                     ]
                                 ]
                             ]
@@ -325,10 +347,10 @@ isInList id idList =
 -- HTTP
 
 
-send : String -> String -> String -> Cmd Msg
-send channelid thingkey message =
+send : String -> String -> String -> String -> Cmd Msg
+send channelid thingkey message subtopic =
     HttpMF.request
-        (B.relative [ "http", paths.channels, channelid, paths.messages ] [])
+        (B.relative [ "http", paths.channels, channelid, paths.messages, subtopic ] [])
         "POST"
         thingkey
         (Http.stringBody "application/json" message)
