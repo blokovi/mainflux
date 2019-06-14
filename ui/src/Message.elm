@@ -261,7 +261,7 @@ view model =
                                 ]
                             , Grid.col [ Col.attrs [ align "right" ] ]
                                 [ Form.group []
-                                    [ Button.button [ Button.secondary, Button.attrs [ Spacing.ml1 ], Button.onClick StartRecording ] [ text "Record" ]
+                                    [ Button.button [ Button.secondary, Button.attrs [ Spacing.ml1 ], Button.onClick StartRecording ] [ text "Record~" ]
                                     , Button.button [ Button.secondary, Button.attrs [ Spacing.ml1 ], Button.onClick StopRecording ] [ text "Stop" ]
                                     , Button.button [ Button.secondary, Button.attrs [ Spacing.ml1 ], Button.onClick SendMessage ] [ text "Send" ]
                                     ]
