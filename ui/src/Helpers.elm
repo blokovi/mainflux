@@ -4,7 +4,7 @@
 -- SPDX-License-Identifier: Apache-2.0
 
 
-module Helpers exposing (appendIf, buildQueryParamList, checkEntity, disableNext, faIcons, fontAwesome, genCardConfig, genOrderedList, genPagination, isChecked, offsetToPage, pageToOffset, parseString, resetList, response, validateInt, validateOffset)
+module Helpers exposing (appendIf, buildQueryParamList, checkEntity, disableNext, faIcons, fontAwesome, genCardConfig, genOrderedList, genPagination, isChecked, offsetToPage, pageToOffset, parseString, resetList, response, validateInt, validateOffset, wowzaCmd)
 
 import Bootstrap.Button as Button
 import Bootstrap.Card as Card
@@ -166,6 +166,12 @@ faIcons =
     , websocket = "fas fa-arrows-alt-v"
     , send = "fas fa-arrow-up"
     , receive = "fas fa-arrow-down"
+    }
+
+
+wowzaCmd =
+    { recStart = """[{"bn":"1:", "n":"control", "vs":"wowza-start-recording, _defaultServer_, _defaultVHost_, liveapp, liveapp, cam1.stream"}]"""
+    , recStop = """[{"bn":"1:", "n":"control", "vs":"wowza-stop-recording, _defaultServer_, _defaultVHost_, liveapp, liveapp, cam1.stream"}]"""
     }
 
 

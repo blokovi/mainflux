@@ -20,7 +20,7 @@ import Bootstrap.Utilities.Spacing as Spacing
 import Channel
 import Debug exposing (log)
 import Error
-import Helpers exposing (faIcons, fontAwesome)
+import Helpers exposing (faIcons, fontAwesome, wowzaCmd)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
@@ -95,19 +95,19 @@ update msg model token =
             ( { model | message = message }, Cmd.none )
 
         StartRecording ->
-            ( { model | message = """[{"bn":"1:", "n":"control", "vs":"wowza-start-recording, _defaultServer_, _defaultVHost_, liveapp, liveapp, cam1.stream"}]""" }
+            ( model
             , Cmd.batch
                 (List.map
-                    (\channelid -> send channelid model.thingkey model.message "req")
+                    (\channelid -> send channelid model.thingkey wowzaCmd.recStart paths.req)
                     model.checkedChannelsIds
                 )
             )
 
         StopRecording ->
-            ( { model | message = """[{"bn":"1:", "n":"control", "vs":"wowza-stop-recording, _defaultServer_, _defaultVHost_, liveapp, liveapp, cam1.stream"}]""" }
+            ( model
             , Cmd.batch
                 (List.map
-                    (\channelid -> send channelid model.thingkey model.message "req")
+                    (\channelid -> send channelid model.thingkey wowzaCmd.recStop paths.req)
                     model.checkedChannelsIds
                 )
             )

@@ -26,6 +26,8 @@ paths =
     , channels = "channels"
     , messages = "messages"
     , version = "version"
+    , req = "req"
+    , res = "res"
     }
 
 
