@@ -127,6 +127,7 @@ type Msg
     | Things
     | Connection
     | Messages
+    | PartyCheck
 
 
 
@@ -186,6 +187,9 @@ update msg model =
 
         Messages ->
             updateMessage { model | view = "messages" } (Message.ThingMsg Thing.RetrieveThings)
+
+        PartyCheck ->
+            ( { model | view = "partycheck" }, Cmd.none )
 
 
 updateUser : Model -> User.Msg -> ( Model, Cmd Msg )
@@ -316,6 +320,7 @@ view model =
                         , menuItem "Channels" Channels faIcons.channels (model.view == "channels")
                         , menuItem "Connection" Connection faIcons.connection (model.view == "connection")
                         , menuItem "Messages" Messages faIcons.messages (model.view == "messages")
+                        , menuItem "PartyCheck" PartyCheck faIcons.music (model.view == "partycheck")
                         ]
                     ]
 
@@ -346,6 +351,9 @@ view model =
 
                         "messages" ->
                             Html.map MessageMsg (Message.view model.message)
+
+                        "partycheck" ->
+                            iframe [ src "http://app.partycheck.com", attribute "width" "100%", height 600 ] []
 
                         _ ->
                             dashboard model

@@ -166,6 +166,7 @@ faIcons =
     , websocket = "fas fa-arrows-alt-v"
     , send = "fas fa-arrow-up"
     , receive = "fas fa-arrow-down"
+    , music = "fas fa-music"
     }
 
 
