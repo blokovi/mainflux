@@ -1,6 +1,5 @@
 //
-// Copyright (c) 2018
-// Mainflux
+// Copyright (c) Mainflux
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -118,6 +117,20 @@ type MessagesPage struct {
 	Offset   uint64             `json:"offset"`
 	Limit    uint64             `json:"limit"`
 	Messages []mainflux.Message `json:"messages,omitempty"`
+}
+
+//
+type BootstrapConfig struct {
+	key         string
+	ThingID     string   `json:"thing_id"`
+	ExternalID  string   `json:"external_id"`
+	ExternalKey string   `json:"external_key"`
+	Channels    []string `json:"channels"`
+	Name        string   `json:"name"`
+	Content     string   `json:"content"`
+	ClientCert  string   `json:"client_cert"`
+	ClientKey   string   `json:"client_key"`
+	CACert      string   `json:"ca_cert"`
 }
 
 // SDK contains Mainflux API.
