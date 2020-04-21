@@ -87,7 +87,7 @@ setup() {
 
 run_test() {
 	echo "Running lint..."
-	golangci-lint run --no-config
+	golangci-lint run --disable staticcheck
 	echo "Running tests..."
 	echo "" > coverage.txt
 	for d in $(go list ./... | grep -v 'vendor\|cmd'); do
