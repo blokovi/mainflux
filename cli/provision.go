@@ -108,8 +108,8 @@ var cmdProvision = []cobra.Command{
 						Connect both things to one of the channels, \
 						and only on thing to other channel.`,
 		Run: func(cmd *cobra.Command, args []string) {
-			numThings := 2
-			numChan := 2
+			numThings := 10
+			numChan := 1
 			things := []mfxsdk.Thing{}
 			channels := []mfxsdk.Channel{}
 
@@ -167,24 +167,29 @@ var cmdProvision = []cobra.Command{
 				return
 			}
 
+			var thids []string
+			for i := 0; i < numThings; i++ {
+				thids = append(thids, things[i].ID)
+			}
+
 			// Connect things to channels - first thing to both channels, second only to first
 			conIDs := mfxsdk.ConnectionIDs{
-				ChannelIDs: []string{channels[0].ID, channels[1].ID},
-				ThingIDs:   []string{things[0].ID},
+				ChannelIDs: []string{channels[0].ID},
+				ThingIDs:   thids,
 			}
 			if err := sdk.Connect(conIDs, ut); err != nil {
 				logError(err)
 				return
 			}
 
-			conIDs = mfxsdk.ConnectionIDs{
-				ChannelIDs: []string{channels[0].ID},
-				ThingIDs:   []string{things[1].ID},
-			}
-			if err := sdk.Connect(conIDs, ut); err != nil {
-				logError(err)
-				return
-			}
+			// conIDs = mfxsdk.ConnectionIDs{
+			// 	ChannelIDs: []string{channels[0].ID},
+			// 	ThingIDs:   []string{things[1].ID},
+			// }
+			// if err := sdk.Connect(conIDs, ut); err != nil {
+			// 	logError(err)
+			// 	return
+			// }
 
 			logJSON(user, ut, things, channels)
 		},

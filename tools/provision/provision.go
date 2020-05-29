@@ -122,6 +122,7 @@ func Provision(conf Config) {
 	things := make([]sdk.Thing, conf.Num)
 	cIDs := []string{}
 	tIDs := []string{}
+	tKeys := []string{}
 
 	fmt.Println("# List of things that can be connected to MQTT broker")
 
@@ -134,6 +135,7 @@ func Provision(conf Config) {
 		thing, err := s.Thing(tid, token)
 		things[i] = thing
 		tIDs = append(tIDs, tid)
+		tKeys = append(tKeys, thing.Key)
 
 		if err != nil {
 			log.Fatalf("Failed to fetch the thing: %s", err.Error())
@@ -204,26 +206,39 @@ func Provision(conf Config) {
 		}
 
 		// Print output
-		fmt.Printf("[[things]]\nthing_id = \"%s\"\nthing_key = \"%s\"\n", tid, thing.Key)
+		// fmt.Printf("\"%s\",\t\"%s\",\n", tid, thing.Key)
 		if conf.SSL {
 			fmt.Printf("mtls_cert = \"\"\"%s\"\"\"\n", cert)
 			fmt.Printf("mtls_key = \"\"\"%s\"\"\"\n", key)
 		}
-		fmt.Println("")
+		// fmt.Println("")
 	}
 
-	fmt.Printf("# List of channels that things can publish to\n" +
-		"# each channel is connected to each thing from things list\n")
+	fmt.Printf("# List of things ids, things keys, channels ids that things can publish to\n" +
+		"# first channel is connected to first thing from things list and so on..\n")
+	fmt.Println("[")
 	for i := 0; i < conf.Num; i++ {
-		fmt.Printf("[[channels]]\nchannel_id = \"%s\"\n\n", cIDs[i])
+		fmt.Printf("\"%s\",\n", tIDs[i])
 	}
+	fmt.Println("]\n[")
+	for i := 0; i < conf.Num; i++ {
+		fmt.Printf("\"%s\",\n", tKeys[i])
+	}
+	fmt.Println("]\n[")
+	for i := 0; i < conf.Num; i++ {
+		fmt.Printf("\"%s\",\n", cIDs[i])
+	}
+	fmt.Println("]")
 
-	conIDs := sdk.ConnectionIDs{
-		ChannelIDs: cIDs,
-		ThingIDs:   tIDs,
-	}
-	if err := s.Connect(conIDs, token); err != nil {
-		log.Fatalf("Failed to connect things %s to channels %s: %s", conIDs.ThingIDs, conIDs.ChannelIDs, err)
+	for i := 0; i < conf.Num; i++ {
+
+		conIDs := sdk.ConnectionIDs{
+			ChannelIDs: cIDs[i : i+1],
+			ThingIDs:   tIDs[i : i+1],
+		}
+		if err := s.Connect(conIDs, token); err != nil {
+			log.Fatalf("Failed to connect things %s to channels %s: %s", conIDs.ThingIDs, conIDs.ChannelIDs, err)
+		}
 	}
 }
 
@@ -253,3 +268,11 @@ func pemBlockForKey(priv interface{}) *pem.Block {
 		return nil
 	}
 }
+
+// Save - store config in a file
+// func Save(c string, file string) error {
+// 	if err := ioutil.WriteFile(file, c, 0644); err != nil {
+// 		return errors.New(fmt.Sprintf("Error writing toml: %s", err))
+// 	}
+// 	return nil
+// }
