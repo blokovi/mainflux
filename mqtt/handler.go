@@ -4,6 +4,7 @@
 package mqtt
 
 import (
+	"bytes"
 	"errors"
 	"net/url"
 	"regexp"
@@ -124,6 +125,7 @@ func (h *handler) Publish(c *session.Client, topic *string, payload *[]byte) {
 		return
 	}
 	h.logger.Info("Publish - client ID " + c.ID + " to the topic: " + *topic)
+	h.logger.Debug("Publish - payload: " + bytes.NewBuffer(*payload).String())
 	// Topics are in the format:
 	// ch/<channel_id>/msg/<subtopic>/.../ct/<content_type>
 
