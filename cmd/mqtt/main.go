@@ -40,6 +40,7 @@ const (
 	defMQTTTargetHost        = "0.0.0.0"
 	defMQTTTargetPort        = "1883"
 	defMQTTForwarderTimeout  = "30s" // 30 seconds
+	healthCheckSleep         = 1 * time.Second
 	defMQTTTargetHealthCheck = ""
 	envMQTTPort              = "MF_MQTT_ADAPTER_MQTT_PORT"
 	envMQTTTargetHost        = "MF_MQTT_ADAPTER_MQTT_TARGET_HOST"
@@ -143,12 +144,12 @@ func main() {
 			res, err := http.Head(cfg.mqttTargetHealthCheck)
 			if err != nil {
 				logger.Info(fmt.Sprintf("Broker not ready: %s ", err.Error()))
-				time.Sleep(1 * time.Second)
+				time.Sleep(healthCheckSleep)
 				continue
 			}
-			if res.StatusCode != 200 {
+			if res.StatusCode != http.StatusOK {
 				logger.Info(fmt.Sprintf("Broker not ready, status code: %d ", res.StatusCode))
-				time.Sleep(1 * time.Second)
+				time.Sleep(healthCheckSleep)
 				continue
 			}
 			logger.Info("MQTT Broker health check successful")
