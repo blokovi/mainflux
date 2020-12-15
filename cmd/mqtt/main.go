@@ -142,17 +142,21 @@ func main() {
 	if cfg.mqttTargetHealthCheck != "" {
 		for {
 			res, err := http.Head(cfg.mqttTargetHealthCheck)
+
 			if err != nil {
 				logger.Info(fmt.Sprintf("Broker not ready: %s ", err.Error()))
+				res.Body.Close()
 				time.Sleep(healthCheckSleep)
 				continue
 			}
 			if res.StatusCode != http.StatusOK {
 				logger.Info(fmt.Sprintf("Broker not ready, status code: %d ", res.StatusCode))
+				res.Body.Close()
 				time.Sleep(healthCheckSleep)
 				continue
 			}
 			logger.Info("MQTT Broker health check successful")
+			res.Body.Close()
 			break
 		}
 	}
