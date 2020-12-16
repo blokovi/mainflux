@@ -126,6 +126,30 @@ func main() {
 		log.Fatalf(err.Error())
 	}
 
+	if cfg.mqttTargetHealthCheck != "" {
+		for {
+			res, err := http.Get(cfg.mqttTargetHealthCheck)
+			if err != nil {
+				logger.Info(fmt.Sprintf("Broker not ready: %s ", err.Error()))
+			}
+			if res != nil {
+				body, err := ioutil.ReadAll(res.Body)
+				if err != nil {
+					logger.Warn(fmt.Sprintf("Error reading response body: %s", err.Error()))
+				}
+				if err := res.Body.Close(); err != nil {
+					logger.Warn(fmt.Sprintf("Error closing response body: %s", err.Error()))
+				}
+				if res.StatusCode == http.StatusOK {
+					logger.Info("MQTT Broker health check successful")
+					break
+				}
+				logger.Info(fmt.Sprintf("Broker not ready, status code: %d, body: %s", res.StatusCode, body))
+			}
+			time.Sleep(healthCheckSleep)
+		}
+	}
+
 	conn := connectToThings(cfg, logger)
 	defer conn.Close()
 
@@ -138,28 +162,6 @@ func main() {
 		os.Exit(1)
 	}
 	defer nps.Close()
-
-	if cfg.mqttTargetHealthCheck != "" {
-		for {
-			res, err := http.Head(cfg.mqttTargetHealthCheck)
-
-			if err != nil {
-				logger.Info(fmt.Sprintf("Broker not ready: %s ", err.Error()))
-				res.Body.Close()
-				time.Sleep(healthCheckSleep)
-				continue
-			}
-			if res.StatusCode != http.StatusOK {
-				logger.Info(fmt.Sprintf("Broker not ready, status code: %d ", res.StatusCode))
-				res.Body.Close()
-				time.Sleep(healthCheckSleep)
-				continue
-			}
-			logger.Info("MQTT Broker health check successful")
-			res.Body.Close()
-			break
-		}
-	}
 
 	mp, err := mqttpub.NewPublisher(fmt.Sprintf("%s:%s", cfg.mqttTargetHost, cfg.mqttTargetPort), cfg.mqttForwarderTimeout)
 	if err != nil {
