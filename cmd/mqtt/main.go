@@ -40,7 +40,7 @@ const (
 	defMQTTTargetHost        = "0.0.0.0"
 	defMQTTTargetPort        = "1883"
 	defMQTTForwarderTimeout  = "30s" // 30 seconds
-	healthCheckSleep         = 1 * time.Second
+	healthCheckSleep         = 60 * time.Second
 	defMQTTTargetHealthCheck = ""
 	envMQTTPort              = "MF_MQTT_ADAPTER_MQTT_PORT"
 	envMQTTTargetHost        = "MF_MQTT_ADAPTER_MQTT_TARGET_HOST"
@@ -126,27 +126,26 @@ func main() {
 		log.Fatalf(err.Error())
 	}
 
+	time.Sleep(healthCheckSleep)
 	if cfg.mqttTargetHealthCheck != "" {
-		for {
-			res, err := http.Get(cfg.mqttTargetHealthCheck)
+		res, err := http.Get(cfg.mqttTargetHealthCheck)
+		if err != nil {
+			logger.Info(fmt.Sprintf("Broker not ready: %s ", err.Error()))
+			os.Exit(1)
+		}
+		if res != nil {
+			body, err := ioutil.ReadAll(res.Body)
 			if err != nil {
-				logger.Info(fmt.Sprintf("Broker not ready: %s ", err.Error()))
+				logger.Warn(fmt.Sprintf("Error reading response body: %s", err.Error()))
 			}
-			if res != nil {
-				body, err := ioutil.ReadAll(res.Body)
-				if err != nil {
-					logger.Warn(fmt.Sprintf("Error reading response body: %s", err.Error()))
-				}
-				if err := res.Body.Close(); err != nil {
-					logger.Warn(fmt.Sprintf("Error closing response body: %s", err.Error()))
-				}
-				if res.StatusCode == http.StatusOK {
-					logger.Info("MQTT Broker health check successful")
-					break
-				}
+			if err := res.Body.Close(); err != nil {
+				logger.Warn(fmt.Sprintf("Error closing response body: %s", err.Error()))
+			}
+			if res.StatusCode != http.StatusOK {
 				logger.Info(fmt.Sprintf("Broker not ready, status code: %d, body: %s", res.StatusCode, body))
+				os.Exit(1)
 			}
-			time.Sleep(healthCheckSleep)
+			logger.Info("MQTT Broker health check successful")
 		}
 	}
 
