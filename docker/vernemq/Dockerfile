@@ -47,7 +47,7 @@ EXPOSE 1883 8883 8080 44053 4369 8888 \
 
 VOLUME ["/vernemq/log", "/vernemq/data", "/vernemq/etc"]
 
-HEALTHCHECK CMD vernemq ping | grep -q pong
+HEALTHCHECK CMD wget --no-verbose --tries=1 --spider http://localhost:8888/health || exit 1
 
 USER vernemq
 CMD ["start_vernemq"]
