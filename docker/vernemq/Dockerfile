@@ -47,7 +47,7 @@ EXPOSE 1883 8883 8080 44053 4369 8888 \
 
 VOLUME ["/vernemq/log", "/vernemq/data", "/vernemq/etc"]
 
-HEALTHCHECK CMD curl -s --fail http://localhost:8888/health || exit 1
+HEALTHCHECK CMD curl -s -f http://localhost:8888/health || false
 
 USER vernemq
 CMD ["start_vernemq"]
