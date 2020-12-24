@@ -40,7 +40,6 @@ const (
 	defMQTTTargetHost        = "0.0.0.0"
 	defMQTTTargetPort        = "1883"
 	defMQTTForwarderTimeout  = "30s" // 30 seconds
-	healthCheckSleep         = 1 * time.Second
 	defMQTTTargetHealthCheck = ""
 	envMQTTPort              = "MF_MQTT_ADAPTER_MQTT_PORT"
 	envMQTTTargetHost        = "MF_MQTT_ADAPTER_MQTT_TARGET_HOST"
@@ -91,6 +90,11 @@ const (
 	defAuthCacheDB   = "0"
 )
 
+const (
+	healthCheckSleep      = time.Second
+	maxHealthCheckRetries = 10
+)
+
 type config struct {
 	mqttPort              string
 	mqttTargetHost        string
@@ -127,7 +131,7 @@ func main() {
 	}
 
 	if cfg.mqttTargetHealthCheck != "" {
-		for {
+		for i := 1; i <= maxHealthCheckRetries; i++ {
 			res, err := http.Get(cfg.mqttTargetHealthCheck)
 			if err != nil {
 				logger.Info(fmt.Sprintf("Broker not ready: %s ", err.Error()))
@@ -145,6 +149,10 @@ func main() {
 					break
 				}
 				logger.Info(fmt.Sprintf("Broker not ready, status code: %d, body: %s", res.StatusCode, body))
+			}
+			if i == maxHealthCheckRetries {
+				logger.Error("MQTT healthcheck limit exceeded, exiting.")
+				os.Exit(1)
 			}
 			time.Sleep(healthCheckSleep)
 		}
