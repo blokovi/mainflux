@@ -135,21 +135,22 @@ func main() {
 			res, err := http.Get(cfg.mqttTargetHealthCheck)
 			if err != nil {
 				logger.Info(fmt.Sprintf("Broker not ready: %s ", err.Error()))
+				time.Sleep(healthCheckSleep)
+				continue
 			}
-			if res != nil {
-				body, err := ioutil.ReadAll(res.Body)
-				if err != nil {
-					logger.Warn(fmt.Sprintf("Error reading response body: %s", err.Error()))
-				}
-				if err := res.Body.Close(); err != nil {
-					logger.Warn(fmt.Sprintf("Error closing response body: %s", err.Error()))
-				}
-				if res.StatusCode == http.StatusOK {
-					logger.Info("MQTT Broker health check successful")
-					break
-				}
-				logger.Info(fmt.Sprintf("Broker not ready, status code: %d, body: %s", res.StatusCode, body))
+			body, err := ioutil.ReadAll(res.Body)
+			if err != nil {
+				logger.Warn(fmt.Sprintf("Error reading response body: %s", err.Error()))
 			}
+			if err := res.Body.Close(); err != nil {
+				logger.Warn(fmt.Sprintf("Error closing response body: %s", err.Error()))
+			}
+			if res.StatusCode == http.StatusOK {
+				logger.Info("MQTT Broker health check successful")
+				break
+			}
+			logger.Info(fmt.Sprintf("Broker not ready, status code: %d, body: %s", res.StatusCode, body))
+
 			if i == maxHealthCheckRetries {
 				logger.Error("MQTT healthcheck limit exceeded, exiting.")
 				os.Exit(1)
