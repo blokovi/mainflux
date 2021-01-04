@@ -12,12 +12,14 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/cenkalti/backoff/v4"
 	"github.com/go-redis/redis"
 	"github.com/mainflux/mainflux"
 	mflog "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/mqtt"
 	mqttredis "github.com/mainflux/mainflux/mqtt/redis"
 	"github.com/mainflux/mainflux/pkg/auth"
+	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/pkg/messaging"
 	mqttpub "github.com/mainflux/mainflux/pkg/messaging/mqtt"
 	"github.com/mainflux/mainflux/pkg/messaging/nats"
@@ -90,11 +92,6 @@ const (
 	defAuthCacheDB   = "0"
 )
 
-const (
-	healthCheckSleep      = time.Second
-	maxHealthCheckRetries = 10
-)
-
 type config struct {
 	mqttPort              string
 	mqttTargetHost        string
@@ -131,31 +128,33 @@ func main() {
 	}
 
 	if cfg.mqttTargetHealthCheck != "" {
-		for i := 1; i <= maxHealthCheckRetries; i++ {
+
+		// An operation that may fail.
+		operation := func() error {
 			res, err := http.Get(cfg.mqttTargetHealthCheck)
 			if err != nil {
-				logger.Info(fmt.Sprintf("Broker not ready: %s ", err.Error()))
-				time.Sleep(healthCheckSleep)
-				continue
+				return err
 			}
+			defer res.Body.Close()
 			body, err := ioutil.ReadAll(res.Body)
 			if err != nil {
-				logger.Warn(fmt.Sprintf("Error reading response body: %s", err.Error()))
+				return err
 			}
-			if err := res.Body.Close(); err != nil {
-				logger.Warn(fmt.Sprintf("Error closing response body: %s", err.Error()))
+			if res.StatusCode != http.StatusOK {
+				return errors.New(string(body))
 			}
-			if res.StatusCode == http.StatusOK {
-				logger.Info("MQTT Broker health check successful")
-				break
-			}
-			logger.Info(fmt.Sprintf("Broker not ready, status code: %d, body: %s", res.StatusCode, body))
+			return nil
+		}
 
-			if i == maxHealthCheckRetries {
-				logger.Error("MQTT healthcheck limit exceeded, exiting.")
-				os.Exit(1)
-			}
-			time.Sleep(healthCheckSleep)
+		notify := func(e error, next time.Duration) {
+			logger.Info(fmt.Sprintf("Broker not ready: %s, next try in %s", e.Error(), next))
+		}
+
+		err := backoff.RetryNotify(operation, backoff.NewExponentialBackOff(), notify)
+		if err != nil {
+			// Handle error.
+			logger.Info(fmt.Sprintf("MQTT healthcheck limit exceeded, exiting. %s ", err.Error()))
+			os.Exit(1)
 		}
 	}
 

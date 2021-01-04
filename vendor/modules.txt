@@ -30,7 +30,11 @@ github.com/casbin/casbin/v2/rbac
 github.com/casbin/casbin/v2/rbac/default-role-manager
 github.com/casbin/casbin/v2/util
 # github.com/cenkalti/backoff/v3 v3.0.0
+## explicit
 github.com/cenkalti/backoff/v3
+# github.com/cenkalti/backoff/v4 v4.1.0
+## explicit
+github.com/cenkalti/backoff/v4
 # github.com/cespare/xxhash/v2 v2.1.1
 github.com/cespare/xxhash/v2
 # github.com/codemodus/kace v0.5.1
