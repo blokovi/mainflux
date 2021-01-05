@@ -11,12 +11,7 @@ github.com/Microsoft/go-winio/pkg/guid
 github.com/Nvveen/Gotty
 # github.com/beorn7/perks v1.0.1
 github.com/beorn7/perks/quantile
-# github.com/casbin/casbin-pg-adapter v0.1.6
-## explicit
-# github.com/casbin/casbin/v2 v2.18.0
-## explicit
 # github.com/cenkalti/backoff/v3 v3.0.0
-## explicit
 github.com/cenkalti/backoff/v3
 # github.com/cenkalti/backoff/v4 v4.1.0
 ## explicit
