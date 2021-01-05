@@ -128,31 +128,12 @@ func main() {
 	}
 
 	if cfg.mqttTargetHealthCheck != "" {
-
-		// An operation that may fail.
-		operation := func() error {
-			res, err := http.Get(cfg.mqttTargetHealthCheck)
-			if err != nil {
-				return err
-			}
-			defer res.Body.Close()
-			body, err := ioutil.ReadAll(res.Body)
-			if err != nil {
-				return err
-			}
-			if res.StatusCode != http.StatusOK {
-				return errors.New(string(body))
-			}
-			return nil
-		}
-
 		notify := func(e error, next time.Duration) {
 			logger.Info(fmt.Sprintf("Broker not ready: %s, next try in %s", e.Error(), next))
 		}
 
-		err := backoff.RetryNotify(operation, backoff.NewExponentialBackOff(), notify)
+		err := backoff.RetryNotify(healthcheck(cfg), backoff.NewExponentialBackOff(), notify)
 		if err != nil {
-			// Handle error.
 			logger.Info(fmt.Sprintf("MQTT healthcheck limit exceeded, exiting. %s ", err.Error()))
 			os.Exit(1)
 		}
@@ -341,4 +322,22 @@ func proxyWS(cfg config, logger mflog.Logger, handler session.Handler, errs chan
 	http.Handle("/mqtt", wp.Handler())
 
 	errs <- wp.Listen(cfg.httpPort)
+}
+
+func healthcheck(cfg config) func() error {
+	return func() error {
+		res, err := http.Get(cfg.mqttTargetHealthCheck)
+		if err != nil {
+			return err
+		}
+		defer res.Body.Close()
+		body, err := ioutil.ReadAll(res.Body)
+		if err != nil {
+			return err
+		}
+		if res.StatusCode != http.StatusOK {
+			return errors.New(string(body))
+		}
+		return nil
+	}
 }
