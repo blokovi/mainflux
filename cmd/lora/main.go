@@ -125,17 +125,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	go msub.Subscribe(loraServerTopic, func(msg messaging.Message) error {
-		m := lora.Message{}
-		if err := json.Unmarshal(msg.Payload, &m); err != nil {
-			logger.Warn(fmt.Sprintf("Failed to Unmarshal message: %s", err.Error()))
-			return err
-		}
-		if err := svc.Publish(context.Background(), "", m); err != nil {
-			return err
-		}
-		return nil
-	})
+	go subscribeToLoRaBroker(svc, msub, logger)
 
 	go subscribeToThingsES(svc, esConn, cfg.esConsumerName, logger)
 
@@ -188,11 +178,30 @@ func connectToRedis(redisURL, redisPass, redisDB string, logger logger.Logger) *
 	})
 }
 
+func subscribeToLoRaBroker(svc lora.Service, msub messaging.Subscriber, logger logger.Logger) {
+	err := msub.Subscribe(loraServerTopic, func(msg messaging.Message) error {
+		var m lora.Message
+		if err := json.Unmarshal(msg.Payload, &m); err != nil {
+			logger.Warn(fmt.Sprintf("Failed to Unmarshal message: %s", err.Error()))
+			return err
+		}
+		if err := svc.Publish(context.Background(), "", m); err != nil {
+			return err
+		}
+		return nil
+	})
+	if err != nil {
+		logger.Error(fmt.Sprintf("Failed to subscribe to LoRa MQTT broker: %s", err))
+		os.Exit(1)
+	}
+	logger.Info("Subscribed to LoRa MQTT broker")
+}
+
 func subscribeToThingsES(svc lora.Service, client *r.Client, consumer string, logger logger.Logger) {
 	eventStore := redis.NewEventStore(svc, client, consumer, logger)
 	logger.Info("Subscribed to Redis Event Store")
 	if err := eventStore.Subscribe("mainflux.things"); err != nil {
-		logger.Warn(fmt.Sprintf("Lora-adapter service failed to subscribe to Redis event source: %s", err))
+		logger.Warn(fmt.Sprintf("LoRa-adapter service failed to subscribe to Redis event source: %s", err))
 	}
 }
 
@@ -203,6 +212,6 @@ func newRouteMapRepositoy(client *r.Client, prefix string, logger logger.Logger)
 
 func startHTTPServer(cfg config, logger logger.Logger, errs chan error) {
 	p := fmt.Sprintf(":%s", cfg.httpPort)
-	logger.Info(fmt.Sprintf("lora-adapter service started, exposed port %s", cfg.httpPort))
+	logger.Info(fmt.Sprintf("LoRa-adapter service started, exposed port %s", cfg.httpPort))
 	errs <- http.ListenAndServe(p, api.MakeHandler())
 }
