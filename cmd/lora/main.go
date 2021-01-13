@@ -21,7 +21,7 @@ import (
 	"github.com/mainflux/mainflux/lora"
 	"github.com/mainflux/mainflux/lora/api"
 	"github.com/mainflux/mainflux/pkg/messaging"
-	mqttsub "github.com/mainflux/mainflux/pkg/messaging/mqtt"
+	"github.com/mainflux/mainflux/pkg/messaging/mqtt"
 	"github.com/mainflux/mainflux/pkg/messaging/nats"
 
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
@@ -119,7 +119,7 @@ func main() {
 		}, []string{"method"}),
 	)
 
-	msub, err := mqttsub.NewSubscriber(cfg.loraMsgURL, cfg.subTimeout, logger)
+	msub, err := mqtt.NewSubscriber(cfg.loraMsgURL, cfg.subTimeout, logger)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Failed to create MQTT subscriber: %s", err))
 		os.Exit(1)
