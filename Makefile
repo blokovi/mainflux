@@ -106,7 +106,8 @@ define run_docker_addons
 endef
 
 run:
-	docker-compose -f docker/docker-compose.yml --env-file ./docker/.env up; $(call run_docker_addons);
+	docker-compose -f docker/docker-compose.yml --env-file ./docker/.env up;
+	$(call run_docker_addons);
 
 runlora:
 	docker-compose \
