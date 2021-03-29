@@ -99,8 +99,14 @@ release:
 rundev:
 	cd scripts && ./run.sh
 
+define run_docker_addons
+	for addon in $(ADDONS); do \
+	   docker-compose -f docker/addons/$${addon}/docker-compose.yml --env-file ./docker/.env up; \
+	done
+endef
+
 run:
-	docker-compose -f docker/docker-compose.yml up
+	docker-compose -f docker/docker-compose.yml --env-file ./docker/.env up; $(call run_docker_addons);
 
 runlora:
 	docker-compose \
